@@ -10,7 +10,7 @@ To use this tool, you need to have Python installed. You can clone this reposito
 
 1.Clone the repository:
 
-git clone https://github.com/amangupa201/Encoding-Decoding-tool.git
+git clone https://github.com/amangupta201/Encoding-Decoding-Tool.git
 cd Encoding-Decoding-Tool
 
 2.Install the required packages:
