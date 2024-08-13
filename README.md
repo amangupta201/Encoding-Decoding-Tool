@@ -17,11 +17,16 @@ cd Encoding-Decoding-Tool
 pip install base58 base91
 
 3.Usage
+
 Run the script and enter the encoded text when prompted. The script will automatically detect the encoding type and decode the text.
 python encoding_decoding_tool.py
+
 Example Input:
+
 Enter the encoded text you want to decode: UHl0aG9uIDMuMTA=
 Output:
+
 Detected Encoding: Base64
+
 Decoded Text: Python 3.10
 
