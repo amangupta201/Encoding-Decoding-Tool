@@ -1,3 +1,5 @@
+import tkinter as tk
+from tkinter import ttk, messagebox
 import base64
 import base58
 import base91
@@ -18,226 +20,129 @@ MORSE_CODE_DICT = {
     '_': '..--.-', '"': '.-..-.', '$': '...-..-', '@': '.--.-.', "'": '.----.', ' ': '|'
 }
 
+reverse_morse_dict = {v: k for k, v in MORSE_CODE_DICT.items()}
 
 # Encoding functions
 def encode_uu(text):
-    """Encodes text using UUencoding and returns as a string."""
     in_file = io.BytesIO(text.encode())
     out_file = io.BytesIO()
     uu.encode(in_file, out_file, name='data', backtick=True)
     out_file.seek(0)
     return out_file.getvalue().decode()
 
-
 def decode_uu(encoded_text):
-    """Decodes UUencoded text from a string and returns as a string."""
     in_file = io.BytesIO(encoded_text.encode())
     out_file = io.BytesIO()
     uu.decode(in_file, out_file)
     out_file.seek(0)
     return out_file.getvalue().decode()
 
-
 def encode_base64(text):
     return base64.b64encode(text.encode()).decode()
 
-
 def decode_base64(encoded_text):
-    try:
-        return base64.b64decode(encoded_text.strip()).decode('utf-8')
-    except Exception as e:
-        return f"Decoding Error: {e}"
-
-
-def encode_base32(text):
-    return base64.b32encode(text.encode()).decode()
-
-
-def decode_base32(encoded_text):
-    try:
-        return base64.b32decode(encoded_text.strip()).decode('utf-8')
-    except Exception as e:
-        return f"Decoding Error: {e}"
-
+    return base64.b64decode(encoded_text).decode()
 
 def encode_base58(text):
     return base58.b58encode(text.encode()).decode()
 
-
 def decode_base58(encoded_text):
-    try:
-        return base58.b58decode(encoded_text.strip()).decode('utf-8')
-    except Exception as e:
-        return f"Decoding Error: {e}"
-
-
-def encode_base85(text):
-    return base64.b85encode(text.encode()).decode()
-
-
-def decode_base85(encoded_text):
-    try:
-        return base64.b85decode(encoded_text.strip()).decode('utf-8')
-    except Exception as e:
-        return f"Decoding Error: {e}"
-
+    return base58.b58decode(encoded_text).decode()
 
 def encode_base91(text):
     return base91.encode(text.encode())
 
-
 def decode_base91(encoded_text):
-    try:
-        return base91.decode(encoded_text.strip()).decode('utf-8')
-    except Exception as e:
-        return f"Decoding Error: {e}"
-
+    return base91.decode(encoded_text).decode()
 
 def encode_rot13(text):
     return codecs.encode(text, 'rot_13')
 
-
 def decode_rot13(encoded_text):
-    return codecs.decode(encoded_text.strip(), 'rot_13')
-
+    return codecs.decode(encoded_text, 'rot_13')
 
 def encode_url(text):
     return urllib.parse.quote(text)
 
-
 def decode_url(encoded_text):
     return urllib.parse.unquote(encoded_text)
-
 
 def encode_morse(text):
     return ' '.join(MORSE_CODE_DICT.get(char.upper(), '?') for char in text)
 
-
 def decode_morse(encoded_text):
-    reverse_morse_dict = {v: k for k, v in MORSE_CODE_DICT.items()}
     return ''.join(reverse_morse_dict.get(code, '?') for code in encoded_text.split())
 
-
-def encode_hex(text):
-    return text.encode().hex()
-
-
-def decode_hex(encoded_text):
+def perform_action(action, text, encoding_type):
     try:
-        return bytes.fromhex(encoded_text.strip()).decode('utf-8')
+        encodings = {
+            'Base64': (encode_base64, decode_base64),
+            'Base58': (encode_base58, decode_base58),
+            'Base91': (encode_base91, decode_base91),
+            'ROT13': (encode_rot13, decode_rot13),
+            'URL': (encode_url, decode_url),
+            'Morse Code': (encode_morse, decode_morse),
+            'UUencode': (encode_uu, decode_uu)
+        }
+
+        encode_func, decode_func = encodings.get(encoding_type)
+        return encode_func(text) if action == 'Encode' else decode_func(text)
     except Exception as e:
-        return f"Decoding Error: {e}"
+        return f"Error: {e}"
 
-
-def encode_binary(text):
-    return ' '.join(format(ord(char), '08b') for char in text)
-
-
-def decode_binary(encoded_text):
-    try:
-        binary_values = encoded_text.split()
-        return ''.join(chr(int(bv, 2)) for bv in binary_values)
-    except Exception as e:
-        return f"Decoding Error: {e}"
-
-
-def encode_octal(text):
-    return ' '.join(format(ord(char), 'o') for char in text)
-
-
-def decode_octal(encoded_text):
-    try:
-        octal_values = encoded_text.split()
-        return ''.join(chr(int(ov, 8)) for ov in octal_values)
-    except Exception as e:
-        return f"Decoding Error: {e}"
-
-
-def encode_quopri(text):
-    return quopri.encodestring(text.encode()).decode()
-
-
-def decode_quopri(encoded_text):
-    try:
-        return quopri.decodestring(encoded_text.encode()).decode('utf-8')
-    except Exception as e:
-        return f"Decoding Error: {e}"
-
-
-# Function to decode the encoded string
-def identify_and_decode(encoded_text):
-    encodings = {
-        'Base64': decode_base64,
-        'Base32': decode_base32,
-        'Base58': decode_base58,
-        'Base85': decode_base85,
-        'Base91': decode_base91,
-        'ROT13': decode_rot13,
-        'URL': decode_url,
-        'Morse Code': decode_morse,
-        'Hexadecimal': decode_hex,
-        'Binary': decode_binary,
-        'Octal': decode_octal,
-        'UUencode': decode_uu,
-        'Quoted-Printable': decode_quopri
-    }
-
-    results = {}
-    for name, decode_func in encodings.items():
-        try:
-            decoded = decode_func(encoded_text)
-            results[name] = decoded
-        except Exception as e:
-            results[name] = f"Failed to decode: {str(e)}"
-
-    return results
-
-
-# Main program with user input
+# Tkinter GUI
 def main():
-    mode = input("Enter '1' to encode/decode a string or '2' to test decoding an encoded string: ")
+    def process_action():
+        action = action_var.get()
+        encoding_type = encoding_var.get()
+        input_text = input_text_box.get("1.0", tk.END).strip()
 
-    if mode == '1':
-        text = input("Enter the text you want to encode/decode: ")
+        if not input_text:
+            messagebox.showerror("Error", "Input text cannot be empty.")
+            return
 
-        # Encoding and Decoding examples
-        encodings = [
-            ('Base64', encode_base64, decode_base64),
-            ('Base32', encode_base32, decode_base32),
-            ('Base58', encode_base58, decode_base58),
-            ('Base85', encode_base85, decode_base85),
-            ('Base91', encode_base91, decode_base91),
-            ('ROT13', encode_rot13, decode_rot13),
-            ('URL', encode_url, decode_url),
-            ('Morse Code', encode_morse, decode_morse),
-            ('Hexadecimal', encode_hex, decode_hex),
-            ('Binary', encode_binary, decode_binary),
-            ('Octal', encode_octal, decode_octal),
-            ('UUencode', encode_uu, decode_uu),
-            ('Quoted-Printable', encode_quopri, decode_quopri)
-        ]
+        result = perform_action(action, input_text, encoding_type)
+        output_text_box.delete("1.0", tk.END)
+        output_text_box.insert(tk.END, result)
 
-        for name, encode_func, decode_func in encodings:
-            try:
-                encoded = encode_func(text)
-                decoded = decode_func(encoded)
-                print(f"{name} Encoded: {encoded}")
-                print(f"{name} Decoded: {decoded}")
-                print()
-            except Exception as e:
-                print(f"Error with {name}: {e}")
-                print()
+    def clear_fields():
+        input_text_box.delete("1.0", tk.END)
+        output_text_box.delete("1.0", tk.END)
 
-    elif mode == '2':
-        encoded_text = input("Enter the encoded string to decode: ")
-        results = identify_and_decode(encoded_text)
-        for name, result in results.items():
-            print(f"Decoded using {name}: {result}")
-            print()
+    root = tk.Tk()
+    root.title("Encoding & Decoding Tool")
 
-    else:
-        print("Invalid option selected.")
+    # Input Text
+    tk.Label(root, text="Input Text:").grid(row=0, column=0, sticky="w", padx=10, pady=5)
+    input_text_box = tk.Text(root, height=5, width=60)
+    input_text_box.grid(row=1, column=0, columnspan=2, padx=10, pady=5)
 
+    # Encoding Type
+    tk.Label(root, text="Encoding Type:").grid(row=2, column=0, sticky="w", padx=10, pady=5)
+    encoding_var = tk.StringVar(value="Base64")
+    encoding_menu = ttk.Combobox(root, textvariable=encoding_var, state="readonly",
+                                 values=['Base64', 'Base58', 'Base91', 'ROT13', 'URL', 'Morse Code', 'UUencode'])
+    encoding_menu.grid(row=2, column=1, padx=10, pady=5)
+
+    # Action
+    tk.Label(root, text="Action:").grid(row=3, column=0, sticky="w", padx=10, pady=5)
+    action_var = tk.StringVar(value="Encode")
+    action_menu = ttk.Combobox(root, textvariable=action_var, state="readonly", values=['Encode', 'Decode'])
+    action_menu.grid(row=3, column=1, padx=10, pady=5)
+
+    # Output Text
+    tk.Label(root, text="Output Text:").grid(row=4, column=0, sticky="w", padx=10, pady=5)
+    output_text_box = tk.Text(root, height=5, width=60)
+    output_text_box.grid(row=5, column=0, columnspan=2, padx=10, pady=5)
+
+    # Buttons
+    process_button = tk.Button(root, text="Process", command=process_action)
+    process_button.grid(row=6, column=0, padx=10, pady=10)
+
+    clear_button = tk.Button(root, text="Clear", command=clear_fields)
+    clear_button.grid(row=6, column=1, padx=10, pady=10)
+
+    root.mainloop()
 
 if __name__ == "__main__":
     main()
